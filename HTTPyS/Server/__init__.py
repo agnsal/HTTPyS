@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and limitations 
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
-import threading
 import ssl
 from time import time
 
@@ -84,6 +83,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         if self.__POSTCallback:
             self.__POSTCallback(receivedObj)
 
+class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
+    pass
+
 class Server:
     __serverName = None
     __IPAddress = None
@@ -128,7 +130,7 @@ class Server:
         self.__keyFilePath = str(newKeyFilePath)
 
     def runHTTPS(self, resourcePath):
-        httpd = HTTPServer((self.__IPAddress + str(resourcePath), self.__port), self.__handler)
+        httpd = ThreadingSimpleServer((self.__IPAddress + str(resourcePath), self.__port), self.__handler)
         httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=self.__keyFilePath,
                                        certfile=self.__certificateFilePath, server_side=True)
         try:
@@ -141,7 +143,7 @@ class Server:
 
 
     def runHTTP(self, resourcePath):
-        httpd = HTTPServer((self.__IPAddress + str(resourcePath), self.__port), self.__handler)
+        httpd =ThreadingSimpleServer((self.__IPAddress + str(resourcePath), self.__port), self.__handler)
         try:
             print("HTTP Server " + self.__serverName + " running - " + str(time()))
             httpd.serve_forever()
