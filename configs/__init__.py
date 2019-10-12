@@ -21,8 +21,6 @@ templates = {
     "": "index.html",
 }
 
-addHeader = False
-
 def callbackTest(self, value):
     print("I'm the callbackTest!!! " + str(value))
 
