@@ -15,17 +15,18 @@ See the License for the specific language governing permissions and limitations 
 
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
+import threading
 import ssl
 from time import time
 
-from configs import templatesRoot, templates, callbacks, addHeader
+from configs import templatesRoot, templates, callbacks
 
 
 class RequestHandler(BaseHTTPRequestHandler):
     """ Customized handler """
     __templatesRoot = templatesRoot
     __templates = templates
-    __addHeader = addHeader
     __POSTCallback = callbacks['POST']
     __GETCallback = callbacks['GET']
 
@@ -34,10 +35,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         responseCode = int(responseCode)
         self.log_request(responseCode)
         self.send_response_only(responseCode)
-        if self.__addHeader:
-            self.send_header(str(headerKeyword), str(headerValue))
-            self.send_header('Date: ', self.date_time_string())
-            self.end_headers()
 
     def do_GET(self):
         print("Hey, we have a GET Request!")  # Test
@@ -47,6 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             print("GET resource: " + resourcePath)  # Test
             self.path = resourcePath
             try:
+                resource = open(resourcePath, 'rb')
                 self.send_response(200)
                 if ".css" in str(self.path):
                     ct = "text/css"
@@ -58,12 +56,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                     ct = "image/x-icon"
                 else:
                     ct = "text/html"
-                resource = open(resourcePath, 'rb')
                 resourceContent = resource.read()
-                if self.__addHeader:
-                    self.send_header("Content-type", ct)
-                    self.send_header("Content-length", str(len(resourceContent)))
-                    self.end_headers()
+                self.send_header("Content-type", ct)
+                self.send_header("Content-length", str(len(resourceContent)))
+                self.end_headers()
                 self.wfile.write(resourceContent)
                 resource.close()
                 if self.__GETCallback:
@@ -81,6 +77,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             receivedObj[i] = receivedObj[i].split("=")
         receivedObj = dict(receivedObj)
         self.send_response(200)
+        self.send_header('Date: ', self.date_time_string())
+        self.end_headers()
         print("Hey, we have a POST Request!")  # Test
         print("POST received data: " + str(receivedObj))  # Test
         if self.__POSTCallback:
