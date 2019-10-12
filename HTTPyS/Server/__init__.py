@@ -18,13 +18,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import ssl
 from time import time
 
-from configs import templatesRoot, templates, callbacks
+from configs import templatesRoot, templates, callbacks, addHeader
 
 
 class RequestHandler(BaseHTTPRequestHandler):
     """ Customized handler """
     __templatesRoot = templatesRoot
     __templates = templates
+    __addHeader = addHeader
     __POSTCallback = callbacks['POST']
     __GETCallback = callbacks['GET']
 
@@ -33,9 +34,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         responseCode = int(responseCode)
         self.log_request(responseCode)
         self.send_response_only(responseCode)
-        self.send_header(str(headerKeyword), str(headerValue))
-        self.send_header('Date: ', self.date_time_string())
-        self.end_headers()
+        if self.__addHeader:
+            self.send_header(str(headerKeyword), str(headerValue))
+            self.send_header('Date: ', self.date_time_string())
+            self.end_headers()
 
     def do_GET(self):
         print("Hey, we have a GET Request!")  # Test
@@ -43,16 +45,29 @@ class RequestHandler(BaseHTTPRequestHandler):
         if self.path in self.__templates.keys():
             resourcePath = self.__templatesRoot + self.__templates.get(self.path)
             print("GET resource: " + resourcePath)  # Test
+            self.path = resourcePath
             try:
-                resource = open(resourcePath, 'rb')
                 self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                self.wfile.write(resource.read())
+                if ".css" in str(self.path):
+                    ct = "text/css"
+                elif ".json" in str(self.path):
+                    ct = "application/javascript"
+                elif ".js" in str(self.path):
+                    ct = "application/javascript"
+                elif ".ico" in str(self.path):
+                    ct = "image/x-icon"
+                else:
+                    ct = "text/html"
+                resource = open(resourcePath, 'rb')
+                resourceContent = resource.read()
+                if self.__addHeader:
+                    self.send_header("Content-type", ct)
+                    self.send_header("Content-length", str(len(resourceContent)))
+                    self.end_headers()
+                self.wfile.write(resourceContent)
                 resource.close()
                 if self.__GETCallback:
                     self.__GETCallback(self.path)
-                return
             except IOError:
                 self.send_error(404, "File Not Found: " + resourcePath)
         else:
