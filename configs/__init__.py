@@ -14,11 +14,35 @@ See the License for the specific language governing permissions and limitations 
 '''
 
 
+import Models
+
 templatesRoot = "static/templates/"
+cssFilesRoot = "static/css/"
+jsFilesRoot = "static/scripts/"
+jsonFilesRoot = "static/json/"
+imgFilesRoot = "static/img/"
+
 templates = {
-    "/index.html": "index.html",
-    "/": "index.html",
-    "": "index.html",
+    "index.html": {
+        "name": "index.html",
+        "model": Models.IndexViewModel,
+    },
+    "index": {
+            "name": "index.html",
+            "model": [],
+        },
+    "/": {
+            "name": "index.html",
+            "model": [],
+        },
+    "": {
+        "name": "index.html",
+        "model": [],
+    },
+}
+
+actionsForPOST = {
+    # "fooRequest": Models.Example.save,
 }
 
 def callbackTest(self, value):
