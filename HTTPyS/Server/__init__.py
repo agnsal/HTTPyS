@@ -19,15 +19,14 @@ from socketserver import ThreadingMixIn
 import ssl
 from time import time
 
-from configs import templatesRoot, templates, callbacks
+from Controller import Controller
+from configs import callbacks
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    """ Customized handler """
-    __templatesRoot = templatesRoot
-    __templates = templates
     __POSTCallback = callbacks['POST']
     __GETCallback = callbacks['GET']
+    __controller = Controller()
 
     def send_response(self, responseCode, headerKeyword="", headerValue=""):
         """ Customized header """
@@ -38,48 +37,31 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         print("Hey, we have a GET Request!")  # Test
         print(self.path)  # Test
-        if self.path in self.__templates.keys():
-            resourcePath = self.__templatesRoot + self.__templates.get(self.path)
-            print("GET resource: " + resourcePath)  # Test
-            self.path = resourcePath
-            try:
-                resource = open(resourcePath, 'rb')
-                self.send_response(200)
-                if ".css" in str(self.path):
-                    ct = "text/css"
-                elif ".json" in str(self.path):
-                    ct = "application/javascript"
-                elif ".js" in str(self.path):
-                    ct = "application/javascript"
-                elif ".ico" in str(self.path):
-                    ct = "image/x-icon"
-                else:
-                    ct = "text/html"
-                resourceContent = resource.read()
-                self.send_header("Content-type", ct)
-                self.send_header("Content-length", str(len(resourceContent)))
-                self.end_headers()
-                self.wfile.write(resourceContent)
-                resource.close()
-                if self.__GETCallback:
-                    self.__GETCallback(self.path)
-            except IOError:
-                self.send_error(404, "File Not Found: " + resourcePath)
+        result = self.__controller.manageGET(self.path)
+        print(result) # Test
+        if result["resource"] is None:
+            self.send_error(404, "File Not Found: " + self.path)
         else:
-            self.send_error(404, "File Not Found")
+            self.send_response(200)
+            self.send_header("Content-type", result["Content-type"])
+            self.send_header("Content-length", str(len(result["resource"])))
+            self.end_headers()
+            self.wfile.write(result["resource"])
+        if self.__GETCallback:
+            self.__GETCallback(self.path)
 
     def do_POST(self):
-        """ response for a POST """
         content_length = int(self.headers['Content-Length'])
         receivedObj = self.rfile.read(content_length).decode('utf8').replace("'", '"').split("&")
         for i in range(0, len(receivedObj)):
             receivedObj[i] = receivedObj[i].split("=")
         receivedObj = dict(receivedObj)
+        print("Hey, we have a POST Request!")  # Test
+        print(str(receivedObj))  # Test
+        self.__controller.managePOST(receivedObj=receivedObj)
         self.send_response(200)
         self.send_header('Date: ', self.date_time_string())
         self.end_headers()
-        print("Hey, we have a POST Request!")  # Test
-        print("POST received data: " + str(receivedObj))  # Test
         if self.__POSTCallback:
             self.__POSTCallback(receivedObj)
 
