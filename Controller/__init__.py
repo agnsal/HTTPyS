@@ -39,7 +39,7 @@ class Controller:
 
     def manageGET(self, reqPath=""):
         reqPath = str(reqPath)
-        fileName = str(reqPath).split("/")[-1]
+        fileName = str(reqPath).split("/")[-1].split("?")[0]
         if ".css" in fileName:
             ct = "text/css"
             resource = self.takeResourceFile(root=self.__cssFilesRoot, fileName=fileName, mode="rb")
