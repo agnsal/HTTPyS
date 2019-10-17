@@ -17,7 +17,8 @@ See the License for the specific language governing permissions and limitations 
 from os import path
 from mako.template import Template  # You can use another template engine, if you prefer
 
-from configs import templatesRoot, templates
+import Models
+from configs import templatesRoot, templates, jsonFilesRoot
 
 class View:
     __templatesRoot = None
@@ -34,12 +35,12 @@ class View:
         print(fileName)
         dataToPass = None
         if templates[fileName]["model"]:
-            dataToPass = templates[fileName]["model"]
+            dataToPass = eval("Models." + templates[fileName]["model"] + "()").getViewData()
         resourcePath = templatesRoot + templates[fileName]["name"]
         if path.isfile(resourcePath):
             resFile = open(resourcePath, "rb")
             resource = resFile.read()
             resFile.close()
-            return Template(resource).render(data=str(dataToPass)).encode()
+            return Template(resource).render(data=dataToPass).encode()
         else:
             return None
