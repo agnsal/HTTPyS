@@ -13,9 +13,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 See the License for the specific language governing permissions and limitations under the License
 '''
 
-
-import Models
-
 templatesRoot = "static/templates/"
 cssFilesRoot = "static/css/"
 jsFilesRoot = "static/scripts/"
@@ -25,19 +22,19 @@ imgFilesRoot = "static/img/"
 templates = {
     "index.html": {
         "name": "index.html",
-        "model": Models.IndexViewModel,
+        "model": "IndexViewModel",
     },
     "index": {
             "name": "index.html",
-            "model": [],
+            "model": "IndexViewModel",
         },
     "/": {
             "name": "index.html",
-            "model": [],
+            "model": "IndexViewModel",
         },
     "": {
         "name": "index.html",
-        "model": [],
+        "model": "IndexViewModel",
     },
 }
 
